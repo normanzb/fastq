@@ -1,5 +1,5 @@
 {
-  "name": "fastq",
+  "name": "fastq-sanestack",
   "version": "1.17.1",
   "description": "Fast, in memory work queue",
   "main": "queue.js",
