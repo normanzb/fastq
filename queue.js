@@ -294,16 +294,27 @@ function queueAsPromised (context, worker, _concurrency) {
       })
     }
 
-    var previousDrain = queue.drain
-
-    var p = new Promise(function (resolve) {
-      queue.drain = function () {
-        previousDrain()
-        resolve()
+    // reuse the promise to avoid create a new wrapper drain(),
+    // too many wrappers will create a huge chain of nesting calls.
+    // and resulting Maximum stack exceeded error when
+    // `queue.drain()` is called.
+    if (!queue.drainedPromise) {
+      var previousDrain = queue.drain
+      const cleanUp = () => {
+        queue.drainedPromise = undefined
+        queue.drain = noop
       }
-    })
 
-    return p
+      queue.drainedPromise = new Promise(function (resolve) {
+        queue.drain = function () {
+          previousDrain()
+          cleanUp()
+          resolve()
+        }
+      })
+    }
+
+    return queue.drainedPromise
   }
 }
 
