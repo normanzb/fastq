@@ -299,13 +299,13 @@ function queueAsPromised (context, worker, _concurrency) {
     // and resulting Maximum stack exceeded error when
     // `queue.drain()` is called.
     if (!queue.drainedPromise) {
-      var previousDrain = queue.drain
-      const cleanUp = () => {
-        queue.drainedPromise = undefined
-        queue.drain = noop
-      }
-
       queue.drainedPromise = new Promise(function (resolve) {
+        var previousDrain = queue.drain
+        const cleanUp = () => {
+          queue.drainedPromise = undefined
+          queue.drain = previousDrain
+        }
+
         queue.drain = function () {
           previousDrain()
           cleanUp()
