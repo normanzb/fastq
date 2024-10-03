@@ -103,32 +103,6 @@ test('drained with exception should not throw', async function (t) {
   await queue.drained()
 })
 
-test('drained with drain function', async function (t) {
-  let drainCalled = false
-  const queue = buildQueue(worker, 2)
-
-  queue.drain = function () {
-    drainCalled = true
-  }
-
-  const toExec = new Array(10).fill(10)
-  let count = 0
-
-  async function worker (arg) {
-    await sleep(arg)
-    count++
-  }
-
-  toExec.forEach(function () {
-    queue.push()
-  })
-
-  await queue.drained()
-
-  t.equal(count, toExec.length)
-  t.equal(drainCalled, true)
-})
-
 test('drained while idle should resolve', async function (t) {
   const queue = buildQueue(worker, 2)
 
@@ -190,7 +164,7 @@ test('drained returns same promise until it is drained and new item is pushed', 
   t.equal(thenHandler.calls.length, 0)
 })
 
-test('drained 14000+ times should not cause drain() to throw', async function (t) {
+test('drained 14000+ times should not cause drain.resolve() to throw', async function (t) {
   const queue = buildQueue(worker, 1)
   let resolveWorker
 
@@ -210,7 +184,7 @@ test('drained 14000+ times should not cause drain() to throw', async function (t
   }
 
   t.doesNotThrow(async () => {
-    queue.drain()
+    queue.drain?.resolve()
   })
 })
 

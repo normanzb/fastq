@@ -126,28 +126,6 @@ test('set this', function (t) {
   }
 })
 
-test('drain', function (t) {
-  t.plan(4)
-
-  var queue = buildQueue(worker, 1)
-  var worked = false
-
-  queue.push(42, function (err, result) {
-    t.error(err, 'no error')
-    t.equal(result, true, 'result matches')
-  })
-
-  queue.drain = function () {
-    t.equal(true, worked, 'drained')
-  }
-
-  function worker (arg, cb) {
-    t.equal(arg, 42)
-    worked = true
-    setImmediate(cb, null, true)
-  }
-})
-
 test('pause && resume', function (t) {
   t.plan(13)
 
@@ -470,10 +448,6 @@ test('kill', function (t) {
 
   var predrain = queue.drain
 
-  queue.drain = function drain () {
-    t.fail('drain should never be called')
-  }
-
   queue.push(1, done)
   queue.push(4, done)
   queue.unshift(3, done)
@@ -498,16 +472,12 @@ test('kill', function (t) {
 })
 
 test('killAndDrain', function (t) {
-  t.plan(6)
+  t.plan(5)
 
   var queue = buildQueue(worker, 1)
   var expected = [1]
 
   var predrain = queue.drain
-
-  queue.drain = function drain () {
-    t.pass('drain has been called')
-  }
 
   queue.push(1, done)
   queue.push(4, done)
@@ -625,13 +595,15 @@ test('unshift with worker throwing error', function (t) {
   })
 })
 
-test('pause/resume should trigger drain event', function (t) {
+test('pause/resume should resolve drain deferred', function (t) {
   t.plan(1)
 
   var queue = buildQueue(worker, 1)
   queue.pause()
-  queue.drain = function () {
-    t.pass('drain should be called')
+  queue.drain = {
+    resolve: function () {
+      t.pass('drain should be called')
+    }
   }
 
   function worker (arg, cb) {

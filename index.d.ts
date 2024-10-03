@@ -20,7 +20,11 @@ declare namespace fastq {
     killAndDrain(): any
     error(handler: errorHandler<T>): void
     concurrency: number
-    drain(): any
+    drain: undefined | {
+      promise: Promise<void>
+      resolve: () => void
+      reject: (err: Error) => void
+    }
     empty: () => void
     saturated: () => void
   }

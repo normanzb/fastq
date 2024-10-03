@@ -141,7 +141,7 @@ async function asyncWorker (arg: Task): Promise<void> {
 * <a href="#killAndDrain"><code>queue#<b>killAndDrain()</b></code></a>
 * <a href="#error"><code>queue#<b>error()</b></code></a>
 * <a href="#concurrency"><code>queue#<b>concurrency</b></code></a>
-* <a href="#drain"><code>queue#<b>drain</b></code></a>
+* <a href="#drained"><code>queue#.drained()</code></a>
 * <a href="#empty"><code>queue#<b>empty</b></code></a>
 * <a href="#saturated"><code>queue#<b>saturated</b></code></a>
 * <a href="#promise"><code>fastqueue.promise()</code></a>
@@ -232,14 +232,6 @@ each time a task is completed, `err` will be not null if the task has thrown an 
 
 Property that returns the number of concurrent tasks that could be executed in
 parallel. It can be altered at runtime.
-
--------------------------------------------------------
-<a name="drain"></a>
-### queue.drain
-
-Function that will be called when the last
-item from the queue has been processed by a worker.
-It can be altered at runtime.
 
 -------------------------------------------------------
 <a name="empty"></a>

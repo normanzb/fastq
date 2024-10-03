@@ -4,6 +4,13 @@
 
 var reusify = require('reusify')
 
+function Deferred () {
+  this.promise = new Promise((resolve, reject) => {
+    this.resolve = resolve
+    this.reject = reject
+  })
+}
+
 function fastqueue (context, worker, _concurrency) {
   if (typeof context === 'function') {
     _concurrency = worker
@@ -23,7 +30,7 @@ function fastqueue (context, worker, _concurrency) {
 
   var self = {
     push: push,
-    drain: noop,
+    drain: undefined,
     saturated: noop,
     pause: pause,
     paused: false,
@@ -176,21 +183,20 @@ function fastqueue (context, worker, _concurrency) {
         _running--
       }
     } else if (--_running === 0) {
-      self.drain()
+      self.drain?.resolve()
     }
   }
 
   function kill () {
     queueHead = null
     queueTail = null
-    self.drain = noop
+    self.drain = undefined
   }
 
   function killAndDrain () {
     queueHead = null
     queueTail = null
-    self.drain()
-    self.drain = noop
+    self.drain?.resolve()
   }
 
   function error (handler) {
@@ -289,32 +295,21 @@ function queueAsPromised (context, worker, _concurrency) {
 
   function drained () {
     if (queue.idle()) {
-      return new Promise(function (resolve) {
-        resolve()
-      })
+      return Promise.resolve()
     }
 
-    // reuse the promise to avoid create a new wrapper drain(),
-    // too many wrappers will create a huge chain of nesting calls.
-    // and resulting Maximum stack exceeded error when
-    // `queue.drain()` is called.
-    if (!queue.drainedPromise) {
-      var previousDrain = queue.drain
-      const cleanUp = () => {
-        queue.drainedPromise = undefined
-        queue.drain = noop
+    if (!queue.drain) {
+      const dfd = new Deferred()
+      queue.drain = {
+        promise: dfd.promise.then(() => {
+          queue.drain = undefined
+        }),
+        resolve: dfd.resolve,
+        reject: dfd.reject
       }
-
-      queue.drainedPromise = new Promise(function (resolve) {
-        queue.drain = function () {
-          previousDrain()
-          cleanUp()
-          resolve()
-        }
-      })
     }
 
-    return queue.drainedPromise
+    return queue.drain.promise
   }
 }
 

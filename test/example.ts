@@ -14,8 +14,6 @@ queue.push('push without cb')
 
 queue.concurrency
 
-queue.drain()
-
 queue.empty = () => undefined
 
 console.log('the queue tasks are', queue.getQueue())
